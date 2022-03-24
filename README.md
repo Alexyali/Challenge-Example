@@ -37,44 +37,27 @@ class Estimator(object):
 5. The calling frequency of `get_estimated_bandwidth` is about 200 milliseconds.
 6. You can use any built-in library of `python 3.6.9` or third-parties libraries we pre-installed in [Challenge-Environment](https://github.com/OpenNetLab/Challenge-Environment).
 
-## Submission Verification
+## Test Method
 
 ```bash
-# Pull the docker image of challenge environment
-docker pull opennetlab.azurecr.io/challenge-env
+# install anaconda firstly
+# create python env, the same as `gym-example`
+conda create -n alphartc python=3.6
+conda activate alphartc
+conda install pytorch torchvision torchaudio cpuonly -c pytorch
+pip install gym matplotlib
 
-# Download the configuration and test media
-wget https://raw.githubusercontent.com/OpenNetLab/AlphaRTC/main/examples/peerconnection/serverless/corpus/receiver_pyinfer.json -O receiver_pyinfer.json
-wget https://raw.githubusercontent.com/OpenNetLab/AlphaRTC/main/examples/peerconnection/serverless/corpus/sender_pyinfer.json -O sender_pyinfer.json
-mkdir testmedia
-wget https://github.com/OpenNetLab/AlphaRTC/raw/main/examples/peerconnection/serverless/corpus/testmedia/test.wav -O testmedia/test.wav
-wget https://raw.githubusercontent.com/OpenNetLab/AlphaRTC/main/examples/peerconnection/serverless/corpus/testmedia/test.yuv -O testmedia/test.yuv
+# extract alphartc binary
+cd bin
+tar -xvzf peerconnection_serverless.tar.xz
 
-# Run your example locally
-docker run -d --network=host --rm -v `pwd`:/app -w /app --name alphartc_pyinfer opennetlab.azurecr.io/challenge-env peerconnection_serverless receiver_pyinfer.json
-docker exec alphartc_pyinfer peerconnection_serverless sender_pyinfer.json
+# make result dir
+mkdir result
+
+# run the example at recv side
+source recv.sh
+# open a new terminal at send side
+source send.sh
 ```
 
-If the `outvideo.yuv` and `outaudio.wav` are generated at the current folder, it means your bandwidth estimator has connected to AlphaRTC successfully.
-
-
-If you want to try example in different machine.
-Pull the docker image and download the configuration and test media in both machine.
-Then modify the `sender_pyinfer.json` in sender machine, change "dest_ip" to receiver's IP.
-```json
-        "sender": {
-            "enabled": true,
-            "dest_ip": "recever_ip",
-            "dest_port": "8888"
-        },
-```
-**Make sure your sender machine can access receiver machine's 8888 TCP port and any UDP ports.**
-
-Then run the following command, and check if the `outvideo.yuv` and `outaudio.wav` are generated at the receiver machine.
-```bash
-# receiver
-docker run -d --network=host --rm -v  `pwd`:/app -w /app --name alphartc_pyinfer opennetlab.azurecr.io/challenge-env peerconnection_serverless receiver_pyinfer.json
-
-# sender
-docker run -d --network=host --rm -v  `pwd`:/app -w /app --name alphartc_pyinfer opennetlab.azurecr.io/challenge-env peerconnection_serverless sender_pyinfer.json
-```
+If the `outvideo.yuv` and `outaudio.wav` are generated at `result/` folder, it means your bandwidth estimator has connected to AlphaRTC successfully.
